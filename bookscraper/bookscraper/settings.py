@@ -12,6 +12,19 @@ BOT_NAME = "bookscraper"
 SPIDER_MODULES = ["bookscraper.spiders"]
 NEWSPIDER_MODULE = "bookscraper.spiders"
 
+SAVE_TO_POSTGRES_PIPELINE_ENABLED = False
+
+SCRAPEOPS_BASE_URL = "https://headers.scrapeops.io/v1"
+
+# Enable Random User Agent Middleware
+SCRAPEOPS_USER_AGENTS_ENDPOINT = f"{SCRAPEOPS_BASE_URL}/user-agents"
+SCRAPEOPS_RANDOM_USER_AGENTS_ENABLED = True
+SCRAPEOPS_N_USER_AGENTS = 10
+
+# Enable Random Headers Middleware
+SCRAPEOPS_HEADERS_ENDPOINT = f"{SCRAPEOPS_BASE_URL}/browser-headers"
+SCRAPEOPS_RANDOM_HEADERS_ENABLED = False
+SCRAPEOPS_N_HEADERS = 10
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 # USER_AGENT = "bookscraper (+http://www.yourdomain.com)"
@@ -50,9 +63,15 @@ ROBOTSTXT_OBEY = True
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
-# DOWNLOADER_MIDDLEWARES = {
-#    "bookscraper.middlewares.BookscraperDownloaderMiddleware": 543,
-# }
+DOWNLOADER_MIDDLEWARES = {
+    #   "bookscraper.middlewares.BookscraperDownloaderMiddleware": 543,
+    "bookscraper.middlewares.RandomUserAgentMiddleware": (
+        400 if SCRAPEOPS_RANDOM_USER_AGENTS_ENABLED else None
+    ),
+    "bookscraper.middlewares.RandomHeadersMiddleware": (
+        401 if SCRAPEOPS_RANDOM_HEADERS_ENABLED else None
+    )
+}
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
@@ -64,7 +83,9 @@ ROBOTSTXT_OBEY = True
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
     "bookscraper.pipelines.BookscraperPipeline": 300,
-    "bookscraper.pipelines.SaveToPostgresPipeline": 300,
+    "bookscraper.pipelines.SaveToPostgresPipeline": (
+        301 if SAVE_TO_POSTGRES_PIPELINE_ENABLED else None
+    ),
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)

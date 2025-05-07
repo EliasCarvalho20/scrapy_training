@@ -14,7 +14,7 @@ class BookspiderSpider(scrapy.Spider):
 
     def parse(self, response):
         catalogue_pattern = re.compile(r"catalogue/")
-        for book in response.css("article.product_pod"):
+        for book in response.css("article.product_pod")[1:2]:
             book_url = re.sub(
                 catalogue_pattern, "", book.css("h3 > a::attr(href)").get()
             )

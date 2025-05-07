@@ -1,12 +1,10 @@
-# Define here the models for your spider middleware
-#
-# See documentation in:
-# https://docs.scrapy.org/en/latest/topics/spider-middleware.html
+import requests
 
+from random import choice
+from urllib.parse import urlencode
 from scrapy import signals
 
-# useful for handling different item types with a single interface
-from itemadapter import is_item, ItemAdapter
+from bookscraper.env_settings import EnvSettings
 
 
 class BookscraperSpiderMiddleware:
@@ -101,3 +99,71 @@ class BookscraperDownloaderMiddleware:
 
     def spider_opened(self, spider):
         spider.logger.info("Spider opened: %s" % spider.name)
+
+
+class RandomUserAgentMiddleware:
+    @classmethod
+    def from_crawler(cls, crawler):
+        return cls(crawler.settings)
+
+    def __init__(self, settings):
+        self.scrapeops_api_key = EnvSettings().API_KEY
+        self.scrapeops_endpoint = settings.get("SCRAPEOPS_USER_AGENTS_ENDPOINT")
+        self.scrapeops_n_user_agents = settings.get(
+            "SCRAPEOPS_N_USER_AGENTS", 1
+        )
+
+        self.user_agents_list = []
+        self._get_user_agents_list()
+
+    def _get_user_agents_list(self):
+        response = requests.get(
+            url=self.scrapeops_endpoint,
+            params=urlencode(
+                {
+                    "api_key": self.scrapeops_api_key,
+                    "num_results": self.scrapeops_n_user_agents,
+                }
+            ),
+        )
+
+        self.user_agents_list = response.json().get("result", [])
+
+    def _get_random_user_agent(self):
+        return choice(self.user_agents_list)
+
+    def process_request(self, request, spider):
+        request.headers.setdefault("User-Agent", self._get_random_user_agent())
+
+
+class RandomHeadersMiddleware:
+    @classmethod
+    def from_crawler(cls, crawler):
+        return cls(crawler.settings)
+
+    def __init__(self, settings):
+        self.scrapeops_api_key = EnvSettings().API_KEY
+        self.scrapeops_endpoint = settings.get("SCRAPEOPS_HEADERS_ENDPOINT")
+        self.scrapeops_n_headers = settings.get("SCRAPEOPS_N_HEADERS", 1)
+
+        self.headers_list = []
+        self._get_headers_list()
+
+    def _get_headers_list(self):
+        response = requests.get(
+            url=self.scrapeops_endpoint,
+            params=urlencode(
+                {
+                    "api_key": self.scrapeops_api_key,
+                    "num_results": self.scrapeops_n_headers,
+                }
+            ),
+        )
+
+        self.headers_list = response.json().get("result", [])
+
+    def _get_random_header(self):
+        return choice(self.headers_list)
+
+    def process_request(self, request, spider):
+        request.headers = self._get_random_header()

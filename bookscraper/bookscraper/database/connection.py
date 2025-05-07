@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-from bookscraper.database.env_settings import EnvSettings
+from bookscraper.env_settings import EnvSettings
 from bookscraper.database.models import table_registry
 
 
